@@ -50,7 +50,6 @@ namespace API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(string EmailOrPhone, string Password)
         {
-            // تحقق من وجود المستخدم باستخدام البريد الإلكتروني أو رقم الهاتف
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => (u.Email == EmailOrPhone || u.Phone == EmailOrPhone) && u.Password == Password);
 
@@ -59,7 +58,6 @@ namespace API.Controllers
                 return Unauthorized(new { succeed = false, message = "Invalid email/phone or password.", data = (string)null, });
             }
 
-            // لو كان تسجيل الدخول ناجح، يمكنك إضافة منطق إنشاء JWT أو جلسة
             return Ok(new { succeed = true, message = "Login successful.", data = user });
         }
 
@@ -74,7 +72,6 @@ namespace API.Controllers
                 return NotFound(new { succeed = false, message = "User not found.", data = (string)null });
             }
 
-            // تحديث المعلومات
             user.Name = updateUserDto.Name ?? user.Name;
             user.Email = updateUserDto.Email ?? user.Email;
             user.Phone = updateUserDto.Phone ?? user.Phone;
@@ -107,38 +104,54 @@ namespace API.Controllers
         }
 
         [HttpGet("SearchUserWithCourses")]
-        public async Task<IActionResult> SearchUserWithCourses(string searchTerm, int pageNumber, int pageSize)
+        public async Task<IActionResult> SearchUserWithCourses(string? searchTerm, int pageNumber, int pageSize)
         {
             if (pageNumber < 1 || pageSize < 1)
             {
                 return BadRequest("Page number and page size must be greater than 0.");
             }
 
-            var usersQuery = _context.Users
-                .Where(u => u.Phone.Contains(searchTerm) || u.Email.Contains(searchTerm) || u.ParentPhone.Contains(searchTerm))
-                .Select(u => new
+            var usersQuery = _context.Users.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(searchTerm)) 
+            {
+                usersQuery = usersQuery.Where(u =>
+                    u.Phone.Contains(searchTerm) ||
+                    u.Email.Contains(searchTerm) ||
+                    u.ParentPhone.Contains(searchTerm));
+            }
+
+            var usersProjection = usersQuery.Select(u => new
+            {
+                u.Id,
+                u.Name,
+                u.Phone,
+                u.Email,
+                u.ParentPhone,
+                u.Password,
+                u.NationalId,
+                u.UserType,
+                Courses = u.UserCourses.Select(uc => new
                 {
-                    u.Id,
-                    u.Name,
-                    u.Phone,
-                    u.Email,
-                    u.ParentPhone,
-                    u.Password,
-                    u.NationalId,
+                    uc.CourseId,
+                    uc.Course.Name
+                }).ToList()
+            });
 
-                    u.UserType,
-                    Courses = u.UserCourses.Select(uc => new { uc.CourseId, uc.Course.Name }).ToList()
-                });
-
-            var totalUsers = await usersQuery.CountAsync();
-            var users = await usersQuery
+            var totalUsers = await usersProjection.CountAsync();
+            var users = await usersProjection
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
             if (!users.Any())
             {
-                return NotFound(new { succeed = false, message = "No users found matching the search criteria.", data = (string)null, errorDetails = (string)null });
+                return NotFound(new
+                {
+                    succeed = false,
+                    message = "No users found.",
+                    data = (string)null,
+                    errorDetails = (string)null
+                });
             }
 
             return Ok(new
@@ -154,8 +167,9 @@ namespace API.Controllers
                 },
             });
         }
-        [HttpPost("AddCourses")]
-        public async Task<IActionResult> AddCoursesToUser(AddCoursesToUserDto addCoursesToUserDto)
+
+        [HttpPost("AddUserCourses")]
+        public async Task<IActionResult> AddUserCourses(AddCoursesToUserDto addCoursesToUserDto)
         {
             var user = await _context.Users.FindAsync(addCoursesToUserDto.UserId);
 
@@ -266,7 +280,7 @@ namespace API.Controllers
 
             return Ok(new { succeed = true, message = "Image uploaded successfully.", data = (string)null });
         }
-            [HttpGet("GetImage/{id}")]
+            [HttpGet("{id}")]
             public IActionResult GetImage(int id)
             {
                 var imagePath = Path.Combine(_env.WebRootPath, "Users", $"{id}.jpg");
