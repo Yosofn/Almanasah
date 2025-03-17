@@ -2,18 +2,26 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace Model.Data;
 
 public partial class UserLecture
 {
+    [Key]
     public int Id { get; set; }
 
     public int? UserId { get; set; }
 
     public int? LectureId { get; set; }
 
+    [ForeignKey("LectureId")]
+    [InverseProperty("UserLectures")]
     public virtual Lecture Lecture { get; set; }
 
+    [ForeignKey("UserId")]
+    [InverseProperty("UserLectures")]
     public virtual User User { get; set; }
 }

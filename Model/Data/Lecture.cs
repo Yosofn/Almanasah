@@ -2,19 +2,28 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace Model.Data;
 
 public partial class Lecture
 {
+    [Key]
     public int Id { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string Name { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? Date { get; set; }
 
+    [StringLength(255)]
     public string Url { get; set; }
 
+    [StringLength(255)]
     public string Descryption { get; set; }
 
     public int? Order { get; set; }
@@ -23,11 +32,23 @@ public partial class Lecture
 
     public int? TeacherId { get; set; }
 
+    [Column(TypeName = "decimal(10, 2)")]
     public decimal? Price { get; set; }
 
+    public int UnitId { get; set; }
+
+    [ForeignKey("CourseId")]
+    [InverseProperty("Lectures")]
     public virtual Course Course { get; set; }
 
+    [ForeignKey("TeacherId")]
+    [InverseProperty("Lectures")]
     public virtual User Teacher { get; set; }
 
+    [ForeignKey("UnitId")]
+    [InverseProperty("Lectures")]
+    public virtual Unit Unit { get; set; }
+
+    [InverseProperty("Lecture")]
     public virtual ICollection<UserLecture> UserLectures { get; set; } = new List<UserLecture>();
 }

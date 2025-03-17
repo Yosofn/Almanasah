@@ -2,34 +2,54 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace Model.Data;
 
+[Index("Email", Name = "UQ__Users__A9D10534EEECA934", IsUnique = true)]
+[Index("NationalId", Name = "UQ__Users__E9AA32FA0EE33729", IsUnique = true)]
 public partial class User
 {
+    [Key]
     public int Id { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string Name { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string Email { get; set; }
 
+    [Required]
+    [StringLength(255)]
     public string Password { get; set; }
 
+    [StringLength(15)]
     public string Phone { get; set; }
 
+    [StringLength(15)]
     public string ParentPhone { get; set; }
 
+    [StringLength(100)]
     public string Government { get; set; }
 
+    [StringLength(20)]
     public string NationalId { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? RegisterDate { get; set; }
 
     public int? UserType { get; set; }
 
+    [InverseProperty("Teacher")]
     public virtual ICollection<Lecture> Lectures { get; set; } = new List<Lecture>();
 
+    [InverseProperty("User")]
     public virtual ICollection<UserCourse> UserCourses { get; set; } = new List<UserCourse>();
 
+    [InverseProperty("User")]
     public virtual ICollection<UserLecture> UserLectures { get; set; } = new List<UserLecture>();
 }

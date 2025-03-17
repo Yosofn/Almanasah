@@ -2,18 +2,27 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace Model.Data;
 
 public partial class Package
 {
+    [Key]
     public int Id { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string Name { get; set; }
 
+    [StringLength(255)]
     public string Descryption { get; set; }
 
+    [Column(TypeName = "decimal(10, 2)")]
     public decimal? Price { get; set; }
 
+    [InverseProperty("Package")]
     public virtual ICollection<CoursePackage> CoursePackages { get; set; } = new List<CoursePackage>();
 }

@@ -8,20 +8,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Model.Data;
 
-public partial class CoursePackage
+public partial class Unit
 {
     [Key]
     public int Id { get; set; }
 
-    public int? PackageId { get; set; }
+    [Required]
+    [StringLength(255)]
+    public string Name { get; set; }
 
-    public int? CourseId { get; set; }
+    public string Description { get; set; }
+
+    public int CourseId { get; set; }
+
+    public int OrderNumber { get; set; }
 
     [ForeignKey("CourseId")]
-    [InverseProperty("CoursePackages")]
+    [InverseProperty("Units")]
     public virtual Course Course { get; set; }
 
-    [ForeignKey("PackageId")]
-    [InverseProperty("CoursePackages")]
-    public virtual Package Package { get; set; }
+    [InverseProperty("Unit")]
+    public virtual ICollection<Lecture> Lectures { get; set; } = new List<Lecture>();
 }

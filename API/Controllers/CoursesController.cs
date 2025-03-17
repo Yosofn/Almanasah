@@ -124,6 +124,96 @@ namespace API.Controllers
             });
         }
 
+        [HttpGet("GetCourseDetails/{courseId}")]
+        public async Task<IActionResult> GetCourseDetails(int courseId)
+        {
+            var course = await _context.Courses
+                .Include(c => c.Units) // Include units associated with the course
+                .ThenInclude(u => u.Lectures) // Include lectures in the units
+                .FirstOrDefaultAsync(c => c.Id == courseId);
+
+            if (course == null)
+            {
+                return NotFound(new
+                {
+                    succeed = false,
+                    message = $"Course with ID {courseId} not found.",
+                });
+            }
+
+            int lectureCount = await _context.Lectures.CountAsync(l => l.Unit.CourseId == courseId);
+
+            var courseDetails = new
+            {
+                course.Id,
+                course.Name,
+                course.Descryption,
+                course.Price,
+                course.Date,
+                course.Order,
+                course.TeacherId,
+                LectureCount = lectureCount, 
+                Units = course.Units.Select(unit => new
+                {
+                    unit.Id,
+                    unit.Name,
+                    unit.Description,
+                    unit.OrderNumber,
+                    Lectures = unit.Lectures.Select(lecture => new
+                    {
+                        lecture.Id,
+                        lecture.Name,
+                        lecture.Descryption,
+                        lecture.Order
+                    }).OrderBy(lecture => lecture.Order) 
+                }).OrderBy(unit => unit.OrderNumber) 
+            };
+
+            return Ok(new
+            {
+                succeed = true,
+                message = "Course details fetched successfully.",
+                data = courseDetails
+            });
+        }
+
+
+        [HttpGet("GetCoursesByYear/{yearId}")]
+        public async Task<IActionResult> GetCoursesByYear(int yearId)
+        {
+            var courses = await _context.Courses
+                .Where(c => c.YearId == yearId)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Descryption,
+                    c.Date,
+                    c.Price,
+                    c.Order,
+                    c.TeacherId,
+                    c.YearId,
+                    YearName = c.Year.Name 
+                })
+                .ToListAsync();
+
+            if (!courses.Any())
+            {
+                return NotFound(new
+                {
+                    succeed = false,
+                    message = $"No courses found for Year ID {yearId}."
+                });
+            }
+
+            return Ok(new
+            {
+                succeed = true,
+                message = "Courses fetched successfully.",
+                data = courses
+            });
+        }
+
 
         [HttpPost("CreateCourse")]
         public async Task<IActionResult> CreateCourse([FromForm] CreateUpdateCourseDTO courseDto)
@@ -141,6 +231,8 @@ namespace API.Controllers
                 Date = DateTime.Now,
                 Order = courseDto.order,
                 TeacherId = courseDto.TeacherId,
+                YearId = courseDto.YearId
+
             };
 
             _context.Courses.Add(course);
@@ -181,6 +273,8 @@ namespace API.Controllers
             course.Date = DateTime.Now; 
             course.Order = courseDto.order;
             course.TeacherId = courseDto.TeacherId;
+            course.YearId = courseDto.YearId;
+
 
             await _context.SaveChangesAsync();
 

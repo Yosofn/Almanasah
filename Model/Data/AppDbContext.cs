@@ -21,6 +21,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Package> Packages { get; set; }
 
+    public virtual DbSet<Unit> Units { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserCourse> UserCourses { get; set; }
@@ -35,123 +37,69 @@ public partial class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Courses__3214EC0711B7097E");
 
-            entity.Property(e => e.Date).HasColumnType("datetime");
-            entity.Property(e => e.Descryption).HasMaxLength(255);
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
-
-            entity.HasOne(d => d.Year).WithMany(p => p.Courses)
-                .HasForeignKey(d => d.YearId)
-                .HasConstraintName("FK__Courses__YearId__3E52440B");
+            entity.HasOne(d => d.Year).WithMany(p => p.Courses).HasConstraintName("FK__Courses__YearId__3E52440B");
         });
 
         modelBuilder.Entity<CoursePackage>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__CoursePa__3214EC0778A69DF8");
 
-            entity.HasOne(d => d.Course).WithMany(p => p.CoursePackages)
-                .HasForeignKey(d => d.CourseId)
-                .HasConstraintName("FK__CoursePac__Cours__4AB81AF0");
+            entity.HasOne(d => d.Course).WithMany(p => p.CoursePackages).HasConstraintName("FK__CoursePac__Cours__4AB81AF0");
 
-            entity.HasOne(d => d.Package).WithMany(p => p.CoursePackages)
-                .HasForeignKey(d => d.PackageId)
-                .HasConstraintName("FK__CoursePac__Packa__49C3F6B7");
+            entity.HasOne(d => d.Package).WithMany(p => p.CoursePackages).HasConstraintName("FK__CoursePac__Packa__49C3F6B7");
         });
 
         modelBuilder.Entity<Lecture>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Lectures__3214EC07F58FA318");
 
-            entity.Property(e => e.Date).HasColumnType("datetime");
-            entity.Property(e => e.Descryption).HasMaxLength(255);
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Url).HasMaxLength(255);
+            entity.HasOne(d => d.Course).WithMany(p => p.Lectures).HasConstraintName("FK__Lectures__Course__412EB0B6");
 
-            entity.HasOne(d => d.Course).WithMany(p => p.Lectures)
-                .HasForeignKey(d => d.CourseId)
-                .HasConstraintName("FK__Lectures__Course__412EB0B6");
+            entity.HasOne(d => d.Teacher).WithMany(p => p.Lectures).HasConstraintName("FK_Lectures_TeacherId");
 
-            entity.HasOne(d => d.Teacher).WithMany(p => p.Lectures)
-                .HasForeignKey(d => d.TeacherId)
-                .HasConstraintName("FK_Lectures_TeacherId");
+            entity.HasOne(d => d.Unit).WithMany(p => p.Lectures).HasConstraintName("FK_Lectures_Unit");
         });
 
         modelBuilder.Entity<Package>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Packages__3214EC079D85FF00");
+        });
 
-            entity.Property(e => e.Descryption).HasMaxLength(255);
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
+        modelBuilder.Entity<Unit>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Units__3214EC0716593EA4");
+
+            entity.HasOne(d => d.Course).WithMany(p => p.Units).HasConstraintName("FK_Units_Course");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC0702DAC5F2");
 
-            entity.HasIndex(e => e.Email, "UQ__Users__A9D10534EEECA934").IsUnique();
-
-            entity.HasIndex(e => e.NationalId, "UQ__Users__E9AA32FA0EE33729").IsUnique();
-
-            entity.Property(e => e.Email)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.Government).HasMaxLength(100);
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.NationalId).HasMaxLength(20);
-            entity.Property(e => e.ParentPhone).HasMaxLength(15);
-            entity.Property(e => e.Password)
-                .IsRequired()
-                .HasMaxLength(255);
-            entity.Property(e => e.Phone).HasMaxLength(15);
-            entity.Property(e => e.RegisterDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+            entity.Property(e => e.RegisterDate).HasDefaultValueSql("(getdate())");
         });
 
         modelBuilder.Entity<UserCourse>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__UserCour__3214EC07D5A12AB8");
 
-            entity.HasOne(d => d.Course).WithMany(p => p.UserCourses)
-                .HasForeignKey(d => d.CourseId)
-                .HasConstraintName("FK__UserCours__Cours__44FF419A");
+            entity.HasOne(d => d.Course).WithMany(p => p.UserCourses).HasConstraintName("FK__UserCours__Cours__44FF419A");
 
-            entity.HasOne(d => d.User).WithMany(p => p.UserCourses)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__UserCours__UserI__440B1D61");
+            entity.HasOne(d => d.User).WithMany(p => p.UserCourses).HasConstraintName("FK__UserCours__UserI__440B1D61");
         });
 
         modelBuilder.Entity<UserLecture>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__UserLect__3214EC07155C924D");
 
-            entity.HasOne(d => d.Lecture).WithMany(p => p.UserLectures)
-                .HasForeignKey(d => d.LectureId)
-                .HasConstraintName("FK__UserLectu__Lectu__59FA5E80");
+            entity.HasOne(d => d.Lecture).WithMany(p => p.UserLectures).HasConstraintName("FK__UserLectu__Lectu__59FA5E80");
 
-            entity.HasOne(d => d.User).WithMany(p => p.UserLectures)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__UserLectu__UserI__59063A47");
+            entity.HasOne(d => d.User).WithMany(p => p.UserLectures).HasConstraintName("FK__UserLectu__UserI__59063A47");
         });
 
         modelBuilder.Entity<Year>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Years__3214EC0795A49E79");
-
-            entity.Property(e => e.Descryption).HasMaxLength(255);
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
         });
 
         OnModelCreatingPartial(modelBuilder);

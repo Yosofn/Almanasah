@@ -15,6 +15,7 @@ namespace Model.DTOs
         public IFormFile? Image { get; set; } // For image upload
         public int? TeacherId { get; set; }
         public int order { get; set; }
+        public int? YearId { get; set; }
 
     }
 
